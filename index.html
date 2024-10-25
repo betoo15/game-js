@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,10 +11,12 @@
             overflow: hidden;
             background-color: lightblue;
         }
+
         canvas {
             display: block;
             background-color: #87CEEB;
         }
+
         .score {
             position: absolute;
             top: 10px;
@@ -24,6 +27,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="score">Pontuação: 0</div>
     <canvas id="gameCanvas"></canvas>
@@ -46,17 +50,17 @@
             height: 50,
             speed: 5,
             velocityY: 0,
-            jumpForce: 15,
-            gravity: 0.8,
+            jumpForce: 25,
+            gravity: 0,
             grounded: false
         };
 
         // Configurações das moedas
         const coins = [
-            { x: 300, y: canvas.height - 100, radius: 15, collected: false },
-            { x: 400, y: canvas.height - 200, radius: 15, collected: false },
-            { x: 600, y: canvas.height - 100, radius: 15, collected: false },
-            { x: 600, y: canvas.height - 200, radius: 15, collected: false }
+            // { x: 300, y: canvas.height - 100, radius: 15, collected: false },
+            // { x: 400, y: canvas.height - 200, radius: 15, collected: false },
+            // { x: 600, y: canvas.height - 100, radius: 15, collected: false },
+            // { x: 600, y: canvas.height - 200, radius: 15, collected: false }
         ];
 
         // Configuração das plataformas
@@ -68,13 +72,16 @@
 
         // Configuração dos inimigos (obstáculos)
         const enemies = [
-            { x: 500, y: canvas.height - 100, width: 50, height: 50, speed: 2, direction: 1 }
+            // { x: 500, y: canvas.height - 400, width: 50, height: 50, speed: 2, direction: 1 },
+
         ];
 
         // Movimentos
         let keys = {
             ArrowRight: false,
             ArrowLeft: false,
+            ArrowUp: false,
+            ArrowDown: false,
             Space: false
         };
 
@@ -82,15 +89,21 @@
         document.addEventListener('keydown', (e) => {
             if (e.code === 'ArrowRight') keys.ArrowRight = true;
             if (e.code === 'ArrowLeft') keys.ArrowLeft = true;
+            if (e.code === 'ArrowUp') keys.ArrowUp = true;
+            if (e.code === 'ArrowDown') keys.ArrowDown = true;
             if (e.code === 'Space' && mario.grounded) {
                 mario.velocityY = -mario.jumpForce;
                 mario.grounded = false;
             }
+
+            console.log(e.code)
         });
 
         document.addEventListener('keyup', (e) => {
             if (e.code === 'ArrowRight') keys.ArrowRight = false;
             if (e.code === 'ArrowLeft') keys.ArrowLeft = false;
+            if (e.code === 'ArrowUp') keys.ArrowUp = false;
+            if (e.code === 'ArrowDown') keys.ArrowDown = false;
         });
 
         // Função para verificar colisão
@@ -105,6 +118,9 @@
             // Movimento lateral
             if (keys.ArrowRight) mario.x += mario.speed;
             if (keys.ArrowLeft) mario.x -= mario.speed;
+
+            if (keys.ArrowDown) mario.y += mario.speed;
+            if (keys.ArrowUp) mario.y -= mario.speed;
 
             // Aplica gravidade
             mario.velocityY += mario.gravity;
@@ -126,9 +142,19 @@
             if (mario.x + mario.width > canvas.width) mario.x = canvas.width - mario.width;
 
             // Coleta de moedas
-            for (let coin of coins) {
+            for (let index = 0; index < coins.length; index++) {
+                var coin = coins[index]
+                
+
                 if (!coin.collected && checkCollision(mario, { x: coin.x - coin.radius, y: coin.y - coin.radius, width: coin.radius * 2, height: coin.radius * 2 })) {
                     coin.collected = true;
+                    // delete coins[index]
+
+                    coins.splice(index, 1);
+                    break;
+
+                    // 
+
                     score += 10; // Adiciona pontos
                     document.querySelector('.score').innerText = "Pontuação: " + score;
                 }
@@ -136,10 +162,13 @@
 
             // Movimento dos inimigos e colisão
             for (let enemy of enemies) {
-                enemy.x += enemy.speed * enemy.direction;
-                if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
-                    enemy.direction *= -1; // Inverte a direção
-                }
+                enemy.x += enemy.speed * (enemy.direction/ 10); // fazer se mover de acordo com a drieção 
+                enemy.y += enemy.speed * (enemy.directionY/10); // fazer se mover de acordo com a drieção 
+
+
+                // if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+                //     enemy.direction *= -1; // Inverte a direção
+                // }
 
                 if (checkCollision(mario, enemy)) {
                     gameOver = true; // Se o Mario colidir com o inimigo, o jogo acaba
@@ -148,6 +177,48 @@
                 }
             }
         }
+
+
+        // gerar inimigos  
+        var count = 0
+        function newEnemy() {
+            // enemy.x += enemy.speed * enemy.direction;
+
+            
+            enemies.push({
+                x: canvas.width - 1,
+                y: Math.floor(Math.random() *  canvas.height),
+                width: 50,
+                height: 50,
+                speed: count++ / 10 + 7,
+                direction: Math.floor(Math.random() * -50),
+                directionY: Math.floor(Math.random() * 100) - 50,
+            })
+
+
+
+            
+        }
+
+
+        function newCoin() {
+
+            console.log(coins.length)
+            if(coins.length >= 5) return;
+
+
+            coins.push({
+                x: Math.floor(Math.random() *  canvas.width),
+                y: Math.floor(Math.random() *  canvas.height),
+                radius: 15,
+                collected: false 
+            })
+
+
+
+        }
+        setInterval(newEnemy, 200 )
+        setInterval(newCoin, 10)
 
         // Função para desenhar o jogo
         function draw() {
@@ -194,4 +265,5 @@
         gameLoop();
     </script>
 </body>
+
 </html>
